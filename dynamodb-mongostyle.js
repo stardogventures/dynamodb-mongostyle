@@ -71,6 +71,9 @@ getSchemaRange = function(schema) {
 }
 
 function getBestIndex(query, indexes) {
+	if (!indexes) {
+		return null;
+	}
 	for (var i=0; i < indexes.length; i++) {
 		var hash = getSchemaHash(indexes[i].KeySchema);
 		if (query[hash] !== undefined && typeof(query[hash]) !== 'object') {
@@ -80,11 +83,11 @@ function getBestIndex(query, indexes) {
 	return null;
 }
 
-function queryValueToExpression(key, value) {
+queryValueToExpression = function(key, value) {
 	let expression = null;
 
 	if (value && typeof(value) === 'object') {
-		if (value['$ne'] == null) {
+		if (value['$ne'] === null) {
 			expression = 'attribute_exists(#'+key+')';
 			value = null;
 		} else if (value['$ne'] !== undefined) {
@@ -118,7 +121,7 @@ function queryValueToExpression(key, value) {
 	}
 }
 
-function getBestQuery(query, tableName, tableDesc) {
+getBestQuery = function(query, tableName, tableDesc) {
 	var attribNames = {};
 	var attribValues = {};
 	var keyConditionExpression = '';
@@ -151,7 +154,7 @@ function getBestQuery(query, tableName, tableDesc) {
 		if (!attribNames['#'+k]) {
 			attribNames['#'+k] = k;
 			let expr = queryValueToExpression(k, query[k]);
-			if (expr.value) {
+			if (expr.value !== undefined) {
 				attribValues[':'+k] = jsonToDynamo(expr.value);
 			}
 			filterExpression += ' AND ' + expr.expression;
@@ -165,6 +168,8 @@ function getBestQuery(query, tableName, tableDesc) {
 	var type = 'scan';
 	if (Object.keys(attribNames).length > 0) {
 		options.ExpressionAttributeNames = attribNames;
+	}
+	if (Object.keys(attribValues).length > 0) {
 		options.ExpressionAttributeValues = attribValues;
 	}
 	if (keyConditionExpression) {
