@@ -213,6 +213,14 @@ wrapTableFunctions = function(tableName) {
 				if (options.limit) {
 					bestQuery.options.Limit = options.limit;
 				}
+				if (options.project) {
+					var projectionExpression = '';
+					for (var k in options.project) {
+						projectionExpression += ',#' + k;
+						bestQuery.options.ExpressionAttributeNames['#'+k] = k;
+					}
+					bestQuery.options.ProjectionExpression = projectionExpression.substring(1);
+				}
 				if (bestQuery.type == 'scan') {
 					dynamodb.scan(bestQuery.options, function(err, data) {
 						if (err) {
