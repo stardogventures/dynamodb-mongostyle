@@ -22,7 +22,11 @@ if (argv.secret) {
 }
 aws.config.update(config);
 
-dynamodb = new aws.DynamoDB();
+let dynamoConfig = {};
+if (argv.endpoint) {
+	dynamoConfig.endpoint = new aws.Endpoint(argv.endpoint);
+}
+dynamodb = new aws.DynamoDB(dynamoConfig);
 
 db = {};
 dynamodb.listTables(function(err, data) {
