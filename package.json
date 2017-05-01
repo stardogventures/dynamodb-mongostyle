@@ -7,11 +7,18 @@
   "author": "Ian White",
   "license": "Apache-2.0",
   "devDependencies": {
-    "jest": "^19.0.2"
+    "jest": "^19.0.2",
+    "jest-junit": "^1.5.1"
   },
   "scripts": {
     "test": "jest",
     "test-watch": "jest --watch"
+  },
+  "jest": {
+    "testResultsProcessor": "./node_modules/jest-junit"
+  },
+  "jest-junit": {
+    "suiteName": "jest tests"
   },
   "dependencies": {
     "minimist": "^1.2.0"
