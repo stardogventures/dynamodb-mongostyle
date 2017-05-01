@@ -67,3 +67,59 @@ test('getBestQuery', () => {
 			}
 		});
 })
+
+test('getBestIndex', () => {
+	let indexes = [
+		{
+			IndexName: 'status-updateAt-index',
+			KeySchema: [
+				{ AttributeName: 'status', KeyType: 'HASH' },
+				{ AttributeName: 'updateAt', KeyType: 'RANGE' }
+			]
+		}
+	];
+	expect(getBestIndex( { status: 'ACTIVE', updateAt: 1000 }, indexes))
+		.toEqual(
+			{
+				IndexName: 'status-updateAt-index',
+				KeySchema: [
+					{ AttributeName: 'status', KeyType: 'HASH' },
+					{ AttributeName: 'updateAt', KeyType: 'RANGE' }
+				]
+			}
+		);
+	let index = getBestIndex( { status: 'ACTIVE', updateAt: 1000 }, indexes);
+	expect(getSchemaHash(index.KeySchema))
+		.toEqual('status');
+	expect(getSchemaRange(index.KeySchema))
+		.toEqual('updateAt');
+})
+
+test('getBestQuery with range index', () => {
+	let tableDesc = {
+		Table: {
+			KeySchema: [ { KeyType: 'HASH', AttributeName: 'id' }],
+			GlobalSecondaryIndexes: [
+				{
+					IndexName: 'status-updateAt-index',
+					KeySchema: [
+						{ AttributeName: 'status', KeyType: 'HASH' },
+						{ AttributeName: 'updateAt', KeyType: 'RANGE' }
+					]
+				}
+			]
+		},
+	};
+	expect(getBestQuery( { status: 'ACTIVE', updateAt: { $gte: 1000 } }, 'tableName', tableDesc))
+		.toEqual( {
+			type: 'query',
+			options: {
+				TableName: 'tableName',
+				Limit: 10,
+				ExpressionAttributeNames: { '#status': 'status', '#updateAt': 'updateAt' },
+				ExpressionAttributeValues: { ':status': { 'S': 'ACTIVE' }, ':updateAt': { 'N': '1000' } },
+				IndexName: 'status-updateAt-index',
+				KeyConditionExpression: '#status = :status AND #updateAt >= :updateAt'
+			}
+		});
+});

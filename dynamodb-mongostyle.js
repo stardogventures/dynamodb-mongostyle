@@ -70,7 +70,7 @@ getSchemaRange = function(schema) {
 	return null;
 }
 
-function getBestIndex(query, indexes) {
+getBestIndex = function(query, indexes) {
 	if (!indexes) {
 		return null;
 	}
@@ -89,7 +89,7 @@ queryValueToExpression = function(key, value) {
 	if (value && typeof(value) === 'object') {
 		if (value['$ne'] === null) {
 			expression = 'attribute_exists(#'+key+')';
-			value = null;
+			value = undefined;
 		} else if (value['$ne'] !== undefined) {
 			expression = '#'+key+' <> :'+key;
 			value = value['$ne'];
@@ -139,6 +139,7 @@ getBestQuery = function(query, tableName, tableDesc) {
 	} else {
 		var index = getBestIndex(query, tableDesc.Table.GlobalSecondaryIndexes);
 		if (index) {
+			indexName = index.IndexName;
 			var keyHash = getSchemaHash(index.KeySchema);
 			attribNames['#'+keyHash] = keyHash;
 			let expr = queryValueToExpression(keyHash, query[keyHash]);
@@ -146,7 +147,16 @@ getBestQuery = function(query, tableName, tableDesc) {
 				attribValues[':'+keyHash] = jsonToDynamo(expr.value);
 			}
 			keyConditionExpression = expr.expression;
-			indexName = index.IndexName;
+
+			var rangeHash = getSchemaRange(index.KeySchema);
+			if (rangeHash && query[rangeHash] !== undefined) {
+				attribNames['#'+rangeHash] = rangeHash;
+				let expr = queryValueToExpression(rangeHash, query[rangeHash]);
+				if (expr.value) {
+					attribValues[':'+rangeHash] = jsonToDynamo(expr.value);
+				}
+				keyConditionExpression += ' AND ' + expr.expression;
+			}
 		}
 	}
 
