@@ -164,7 +164,7 @@ getBestQuery = function(query, tableName, tableDesc) {
 		if (!attribNames['#'+k]) {
 			attribNames['#'+k] = k;
 			let expr = queryValueToExpression(k, query[k]);
-			if (expr.value !== undefined) {
+			if (expr.value !== undefined && expr.value !== null) {
 				attribValues[':'+k] = jsonToDynamo(expr.value);
 			}
 			filterExpression += ' AND ' + expr.expression;
