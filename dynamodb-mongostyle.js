@@ -271,6 +271,14 @@ wrapTableFunctions = function(tableName) {
 			});
 		},
 
+		remove: function(query) {
+			dynamodb.deleteItem( { TableName: tableName, Key: jsonToDynamo(query) }, function(err, data) {
+				if (err) {
+					console.error(err);
+				}
+			});
+		},
+
 		explain: function(query) {
 			dynamodb.describeTable( { TableName: tableName }, function(err, data) {
 				if (err) {
