@@ -24,7 +24,7 @@
     "suiteName": "jest tests"
   },
   "dependencies": {
-    "aws-sdk": "^2.124.0",
+    "aws-sdk": "^2.814.0",
     "minimist": "^1.2.0"
   }
 }
